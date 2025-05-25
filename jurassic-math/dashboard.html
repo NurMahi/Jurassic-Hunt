@@ -1,0 +1,42 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jurassic Math - Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Background Video -->
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="../assets/video/neon-dino.mp4" type="video/mp4" />
+    Your browser does not support HTML5 video.
+  </video>
+
+  <div class="dashboard-bg">
+    <div class="dashboard-overlay">
+      <div class="top-bar">
+        <div class="coins" id="coinCount">
+          🪙 <span id="coinNumber">10</span>
+        </div>
+      </div>
+
+      <h2>Welcome, <span id="userName">Explorer</span>!</h2>
+      <div class="progress-line">
+        <div class="progress-bar"></div>
+      </div>
+
+      <div class="main-buttons">
+        <button onclick="startChallenge()">🧠 Start Challenge</button>
+        <button onclick="goToBuilder()">🏗️ Build Your Park</button>
+        <button onclick="viewStats()">📊 View Stats</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

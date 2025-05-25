@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurassic Math Lab Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: radial-gradient(circle at center, #001122 0%, #000000 100%);
+            color: #00FFFF;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated starfield background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00FFFF;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 100, 200, 0.1));
+            border-bottom: 2px solid #00FFFF;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .game-title {
+            font-size: 3em;
+            margin: 0;
+            text-shadow: 0 0 20px #00FFFF, 0 0 40px #00FFFF;
+            letter-spacing: 3px;
+            animation: glow-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow-pulse {
+            from { text-shadow: 0 0 20px #00FFFF, 0 0 40px #00FFFF; }
+            to { text-shadow: 0 0 30px #00FFFF, 0 0 60px #00FFFF, 0 0 80px #00FFFF; }
+        }
+
+        .score-display {
+            font-size: 1.4em;
+            margin: 15px 0;
+            color: #FFFF00;
+            text-shadow: 0 0 10px #FFFF00;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 25px;
+            padding: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .math-panel {
+            width: 300px;
+            background: rgba(0, 50, 100, 0.2);
+            border: 2px solid #00FFFF;
+            border-radius: 15px;
+            padding: 25px;
+            height: fit-content;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 1.8em;
+            color: #00FFFF;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 15px #00FFFF;
+        }
+
+        .math-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 150, 255, 0.1));
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: grab;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .math-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .math-item:hover::before {
+            left: 100%;
+        }
+
+        .math-item:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+            border-color: #00FFFF;
+        }
+
+        .math-item:active {
+            cursor: grabbing;
+        }
+
+        .math-symbol {
+            font-size: 2.5em;
+            margin-right: 15px;
+            color: #FFFF00;
+            text-shadow: 0 0 15px #FFFF00;
+        }
+
+        .math-info {
+            flex: 1;
+        }
+
+        .math-name {
+            font-weight: bold;
+            color: #00FFFF;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .math-description {
+            font-size: 0.9em;
+            color: #AAAAFF;
+        }
+
+        .math-points {
+            font-size: 0.9em;
+            color: #00FF00;
+            text-shadow: 0 0 10px #00FF00;
+        }
+
+        .lab-area {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(0, 50, 100, 0.1), rgba(0, 30, 60, 0.1));
+            border: 3px dashed #00FFFF;
+            border-radius: 20px;
+            min-height: 700px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 255, 255, 0.1);
+        }
+
+        .lab-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .lab-area.drag-over {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 150, 255, 0.2));
+            border-color: #FFFF00;
+            box-shadow: inset 0 0 50px rgba(255, 255, 0, 0.3), 0 0 50px rgba(0, 255, 255, 0.5);
+        }
+
+        .placed-math {
+            position: absolute;
+            background: rgba(0, 50, 100, 0.8);
+            border: 2px solid #00FFFF;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .placed-math:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.5);
+            border-color: #FFFF00;
+        }
+
+        .placed-math .math-symbol {
+            font-size: 2em;
+            margin: 0;
+            display: block;
+        }
+
+        .placed-math .math-name {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .progress-panel {
+            background: rgba(0, 50, 100, 0.2);
+            border: 2px solid #00FFFF;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-title {
+            color: #FFFF00;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #FFFF00;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00FFFF;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FFFF, #FFFF00, #00FF00);
+            transition: width 0.8s ease;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            animation: progress-shine 2s infinite;
+        }
+
+        @keyframes progress-shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(0, 50, 100, 0.9);
+            border: 3px solid #FFFF00;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 255, 0, 0.5);
+            z-index: 1000;
+            transition: transform 0.5s ease;
+            backdrop-filter: blur(15px);
+        }
+
+        .achievement-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .achievement-popup h2 {
+            color: #FFFF00;
+            font-size: 2em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px #FFFF00;
+        }
+
+        .achievement-popup p {
+            color: #00FFFF;
+            font-size: 1.2em;
+        }
+
+        .math-problem {
+            background: rgba(255, 255, 0, 0.1);
+            border: 2px solid #FFFF00;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 1.1em;
+            color: #FFFF00;
+        }
+
+        .math-solution {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border-radius: 8px;
+            color: #00FF00;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+
+    <div class="game-header">
+        <h1 class="game-title">🧮 JURASSIC MATH LAB 🦕</h1>
+        <div class="score-display">
+            EQUATIONS SOLVED: <span id="score">0</span> | MATH POWER: <span id="mathPower">0</span>%
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="math-panel">
+            <h2 class="panel-title">⚡ MATH TOOLS</h2>
+            
+            <div class="math-item" draggable="true" data-math="addition" data-points="10" data-symbol="+" data-problem="15 + 8 = ?" data-answer="23">
+                <div class="math-symbol">➕</div>
+                <div class="math-info">
+                    <div class="math-name">Addition</div>
+                    <div class="math-description">Add numbers together</div>
+                    <div class="math-points">+10 Math Power</div>
+                </div>
+            </div>
+
+            <div class="math-item" draggable="true" data-math="subtraction" data-points="10" data-symbol="-" data-problem="25 - 9 = ?" data-answer="16">
+                <div class="math-symbol">➖</div>
+                <div class="math-info">
+                    <div class="math-name">Subtraction</div>
+                    <div class="math-description">Take away numbers</div>
+                    <div class="math-points">+10 Math Power</div>
+                </div>
+            </div>
+
+            <div class="math-item" draggable="true" data-math="multiplication" data-points="15" data-symbol="×" data-problem="7 × 6 = ?" data-answer="42">
+                <div class="math-symbol">✖️</div>
+                <div class="math-info">
+                    <div class="math-name">Multiplication</div>
+                    <div class="math-description">Multiply numbers</div>
+                    <div class="math-points">+15 Math Power</div>
+                </div>
+            </div>
+
+            <div class="math-item" draggable="true" data-math="division" data-points="15" data-symbol="÷" data-problem="48 ÷ 6 = ?" data-answer="8">
+                <div class="math-symbol">➗</div>
+                <div class="math-info">
+                    <div class="math-name">Division</div>
+                    <div class="math-description">Divide numbers</div>
+                    <div class="math-points">+15 Math Power</div>
+                </div>
+            </div>
+
+            <div class="math-item" draggable="true" data-math="fraction" data-points="20" data-symbol="½" data-problem="What is ¾ of 12?" data-answer="9">
+                <div class="math-symbol">🧮</div>
+                <div class="math-info">
+                    <div class="math-name">Fractions</div>
+                    <div class="math-description">Parts of a whole</div>
+                    <div class="math-points">+20 Math Power</div>
+                </div>
+            </div>
+
+            <div class="math-item" draggable="true" data-math="algebra" data-points="25" data-symbol="x" data-problem="If 3x + 5 = 14, what is x?" data-answer="3">
+                <div class="math-symbol">🔢</div>
+                <div class="math-info">
+                    <div class="math-name">Algebra</div>
+                    <div class="math-description">Solve for unknown</div>
+                    <div class="math-points">+25 Math Power</div>
+                </div>
+            </div>
+
+            <div class="progress-panel">
+                <h3 class="progress-title">🚀 LEARNING PROGRESS</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <div id="progressText">Build your Math Lab!</div>
+            </div>
+        </div>
+
+        <div class="lab-area" id="labArea">
+            <div class="lab-grid"></div>
+        </div>
+    </div>
+
+    <div class="achievement-popup" id="achievementPopup">
+        <h2>🏆 ACHIEVEMENT UNLOCKED!</h2>
+        <p id="achievementText"></p>
+    </div>
+
+    <script>
+        let score = 0;
+        let mathPower = 0;
+        let placedItems = [];
+        let itemCounter = 0;
+        let achievements = [];
+
+        const labArea = document.getElementById('labArea');
+        const scoreElement = document.getElementById('score');
+        const mathPowerElement = document.getElementById('mathPower');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const achievementPopup = document.getElementById('achievementPopup');
+        const achievementText = document.getElementById('achievementText');
+
+        // Create animated starfield
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starfield.appendChild(star);
+            }
+        }
+
+        // Drag and drop functionality
+        document.querySelectorAll('.math-item').forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+        });
+
+        labArea.addEventListener('dragover', handleDragOver);
+        labArea.addEventListener('drop', handleDrop);
+        labArea.addEventListener('dragenter', handleDragEnter);
+        labArea.addEventListener('dragleave', handleDragLeave);
+
+        function handleDragStart(e) {
+            const itemData = {
+                math: e.currentTarget.dataset.math,
+                points: e.currentTarget.dataset.points,
+                symbol: e.currentTarget.dataset.symbol,
+                problem: e.currentTarget.dataset.problem,
+                answer: e.currentTarget.dataset.answer,
+                name: e.currentTarget.querySelector('.math-name').textContent
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(itemData));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            labArea.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!labArea.contains(e.relatedTarget)) {
+                labArea.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            labArea.classList.remove('drag-over');
+            
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const rect = labArea.getBoundingClientRect();
+            const x = e.clientX - rect.left - 40;
+            const y = e.clientY - rect.top - 40;
+            
+            placeMathItem(data, x, y);
+        }
+
+        function placeMathItem(mathData, x, y) {
+            itemCounter++;
+            const mathElement = document.createElement('div');
+            mathElement.className = 'placed-math floating';
+            mathElement.id = `math-${itemCounter}`;
+            mathElement.style.left = `${Math.max(0, Math.min(x, labArea.clientWidth - 80))}px`;
+            mathElement.style.top = `${Math.max(0, Math.min(y, labArea.clientHeight - 80))}px`;
+            
+            mathElement.innerHTML = `
+                <div class="math-symbol">${mathData.symbol}</div>
+                <div class="math-name">${mathData.name}</div>
+                <div class="math-problem">${mathData.problem}</div>
+                <div class="math-solution">Answer: ${mathData.answer}</div>
+            `;
+            
+            // Make placed items draggable within the lab
+            mathElement.draggable = true;
+            mathElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', mathElement.id);
+            });
+            
+            mathElement.addEventListener('click', () => {
+                showMathChallenge(mathData);
+            });
+            
+            labArea.appendChild(mathElement);
+            
+            // Update game state
+            score += 1;
+            mathPower += parseInt(mathData.points);
+            placedItems.push({
+                id: itemCounter,
+                type: mathData.math,
+                name: mathData.name,
+                x: x,
+                y: y
+            });
+            
+            updateUI();
+            checkAchievements();
+            
+            // Add floating animation delay
+            setTimeout(() => {
+                mathElement.style.animationDelay = Math.random() * 3 + 's';
+            }, 500);
+        }
+
+        function showMathChallenge(mathData) {
+            const userAnswer = prompt(`🧮 MATH CHALLENGE!\n\n${mathData.problem}\n\nEnter your answer:`);
+            if (userAnswer && userAnswer.toString() === mathData.answer.toString()) {
+                showAchievement(`Correct! You solved: ${mathData.problem} = ${mathData.answer}`);
+                mathPower += 5;
+                updateUI();
+            } else if (userAnswer !== null) {
+                alert(`Not quite! The answer is ${mathData.answer}. Keep trying! 🚀`);
+            }
+        }
+
+        function updateUI() {
+            scoreElement.textContent = score;
+            mathPowerElement.textContent = mathPower;
+            
+            const progress = Math.min(100, (mathPower / 200) * 100);
+            progressBar.style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                progressText.textContent = "MATH MASTER ACHIEVED! 🏆";
+            } else if (progress >= 75) {
+                progressText.textContent = "Almost there, Math Genius! 🌟";
+            } else if (progress >= 50) {
+                progressText.textContent = "Great progress, keep going! 🚀";
+            } else if (progress >= 25) {
+                progressText.textContent = "Building your Math Lab! 🔬";
+            } else {
+                progressText.textContent = "Start your Math Adventure! ⚡";
+            }
+        }
+
+        function checkAchievements() {
+            const mathTypes = [...new Set(placedItems.map(item => item.type))];
+            
+            if (score === 1 && !achievements.includes('first')) {
+                achievements.push('first');
+                showAchievement('First Math Tool Activated! 🎯');
+            }
+            
+            if (score === 5 && !achievements.includes('builder')) {
+                achievements.push('builder');
+                showAchievement('Math Lab Builder! 🏗️');
+            }
+            
+            if (mathTypes.length >= 4 && !achievements.includes('diverse')) {
+                achievements.push('diverse');
+                showAchievement('Math Diversity Master! 🌈');
+            }
+            
+            if (mathPower >= 100 && !achievements.includes('power')) {
+                achievements.push('power');
+                showAchievement('Math Power Unleashed! ⚡');
+            }
+        }
+
+        function showAchievement(text) {
+            achievementText.textContent = text;
+            achievementPopup.classList.add('show');
+            setTimeout(() => {
+                achievementPopup.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handle repositioning of placed items
+        labArea.addEventListener('drop', (e) => {
+            const draggedId = e.dataTransfer.getData('text/plain');
+            if (draggedId && draggedId.startsWith('math-')) {
+                const draggedElement = document.getElementById(draggedId);
+                if (draggedElement) {
+                    const rect = labArea.getBoundingClientRect();
+                    const newX = e.clientX - rect.left - 40;
+                    const newY = e.clientY - rect.top - 40;
+                    draggedElement.style.left = `${Math.max(0, Math.min(newX, labArea.clientWidth - 80))}px`;
+                    draggedElement.style.top = `${Math.max(0, Math.min(newY, labArea.clientHeight - 80))}px`;
+                }
+            }
+        });
+
+        // Initialize
+        createStarfield();
+        updateUI();
+        
+        // Welcome message
+        setTimeout(() => {
+            showAchievement('Welcome to Jurassic Math Lab! Drag tools to build your lab! 🧬');
+        }, 1000);
+    </script>
+</body>
+</html>

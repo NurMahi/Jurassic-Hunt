@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math Challenge</title>
+  <link rel="stylesheet" href="css/math.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+
+  <div class="math-container">
+    <div class="coin-display">🪙 <span id="coinCount">0</span></div>
+
+    <div class="question-area">
+      <h2 id="questionText">Loading question...</h2>
+      <h3 id="topicDisplay"></h3>
+      <p id="formulaText" class="formula"></p>
+      <img id="shapeImage" src="" alt="Shape" class="shape-img"/>
+    </div>
+
+    <div class="answer-area">
+      <input type="number" id="userAnswer" placeholder="Type your answer"/>
+      <button onclick="submitAnswer()">Submit</button>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <div class="feedback" id="feedbackMessage"></div>
+
+    <div class="calculator">
+      <iframe src="https://www.desmos.com/scientific" frameborder="0"></iframe>
+    </div>
+  </div>
+
+  <script src="js/math.js"></script>
+</body>
+</html>

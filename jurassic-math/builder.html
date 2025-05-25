@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Park Builder</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-header {
+            background: linear-gradient(45deg, #228B22, #32CD32);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-display {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dino-panel {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            height: fit-content;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #228B22;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .dino-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(45deg, #FFE4B5, #FFEFD5);
+            border: 2px solid #DEB887;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .dino-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .dino-item:active {
+            cursor: grabbing;
+        }
+
+        .dino-emoji {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+
+        .dino-info {
+            flex: 1;
+        }
+
+        .dino-name {
+            font-weight: bold;
+            color: #8B4513;
+        }
+
+        .dino-points {
+            font-size: 0.9em;
+            color: #228B22;
+        }
+
+        .park-area {
+            flex: 1;
+            background: linear-gradient(45deg, #90EE90, #98FB98);
+            border: 3px dashed #228B22;
+            border-radius: 15px;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .park-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(34, 139, 34, 0.1) 20px, transparent 20px),
+                radial-gradient(circle at 80% 70%, rgba(34, 139, 34, 0.1) 15px, transparent 15px),
+                radial-gradient(circle at 60% 20%, rgba(34, 139, 34, 0.1) 25px, transparent 25px);
+        }
+
+        .park-area.drag-over {
+            background: linear-gradient(45deg, #ADFF2F, #90EE90);
+            border-color: #32CD32;
+            box-shadow: 0 0 20px rgba(50, 205, 50, 0.5);
+        }
+
+        .placed-dino {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #228B22;
+            border-radius: 10px;
+            padding: 8px;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .placed-dino:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .placed-dino .dino-emoji {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .happiness-meter {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .happiness-bar {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .happiness-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #FFE66D, #4ECDC4);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .game-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            color: #228B22;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-message.show {
+            opacity: 1;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .bounce {
+            animation: bounce 1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <h1 class="game-title">🦕 Dino Park Builder 🦖</h1>
+        <div class="score-display">
+            Score: <span id="score">0</span> | Happiness: <span id="happiness">100</span>%
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="dino-panel">
+            <h2 class="panel-title">🦴 Dinosaur Collection</h2>
+            
+            <div class="dino-item" draggable="true" data-dino="trex" data-points="50">
+                <div class="dino-emoji">🦖</div>
+                <div class="dino-info">
+                    <div class="dino-name">T-Rex</div>
+                    <div class="dino-points">+50 points</div>
+                </div>
+            </div>
+
+            <div class="dino-item" draggable="true" data-dino="brachio" data-points="30">
+                <div class="dino-emoji">🦕</div>
+                <div class="dino-info">
+                    <div class="dino-name">Brachiosaurus</div>
+                    <div class="dino-points">+30 points</div>
+                </div>
+            </div>
+
+            <div class="dino-item" draggable="true" data-dino="raptor" data-points="40">
+                <div class="dino-emoji">🦮</div>
+                <div class="dino-info">
+                    <div class="dino-name">Velociraptor</div>
+                    <div class="dino-points">+40 points</div>
+                </div>
+            </div>
+
+            <div class="dino-item" draggable="true" data-dino="tri" data-points="35">
+                <div class="dino-emoji">🐲</div>
+                <div class="dino-info">
+                    <div class="dino-name">Triceratops</div>
+                    <div class="dino-points">+35 points</div>
+                </div>
+            </div>
+
+            <div class="dino-item" draggable="true" data-dino="ptero" data-points="25">
+                <div class="dino-emoji">🦅</div>
+                <div class="dino-info">
+                    <div class="dino-name">Pterodactyl</div>
+                    <div class="dino-points">+25 points</div>
+                </div>
+            </div>
+
+            <div class="happiness-meter">
+                <h3>🌟 Park Happiness</h3>
+                <div class="happiness-bar">
+                    <div class="happiness-fill" id="happinessBar"></div>
+                </div>
+                <div id="happinessText">Your dinos are happy!</div>
+            </div>
+        </div>
+
+        <div class="park-area" id="parkArea">
+            <div class="park-background"></div>
+        </div>
+    </div>
+
+    <div class="game-message" id="gameMessage"></div>
+
+    <script>
+        let score = 0;
+        let happiness = 100;
+        let placedDinos = [];
+        let dinoCounter = 0;
+
+        const parkArea = document.getElementById('parkArea');
+        const scoreElement = document.getElementById('score');
+        const happinessElement = document.getElementById('happiness');
+        const happinessBar = document.getElementById('happinessBar');
+        const happinessText = document.getElementById('happinessText');
+        const gameMessage = document.getElementById('gameMessage');
+
+        // Drag and drop functionality
+        document.querySelectorAll('.dino-item').forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+        });
+
+        parkArea.addEventListener('dragover', handleDragOver);
+        parkArea.addEventListener('drop', handleDrop);
+        parkArea.addEventListener('dragenter', handleDragEnter);
+        parkArea.addEventListener('dragleave', handleDragLeave);
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                dino: e.currentTarget.dataset.dino,
+                points: e.currentTarget.dataset.points,
+                emoji: e.currentTarget.querySelector('.dino-emoji').textContent,
+                name: e.currentTarget.querySelector('.dino-name').textContent
+            }));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            parkArea.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!parkArea.contains(e.relatedTarget)) {
+                parkArea.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            parkArea.classList.remove('drag-over');
+            
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const rect = parkArea.getBoundingClientRect();
+            const x = e.clientX - rect.left - 25;
+            const y = e.clientY - rect.top - 25;
+            
+            placeDino(data, x, y);
+        }
+
+        function placeDino(dinoData, x, y) {
+            dinoCounter++;
+            const dinoElement = document.createElement('div');
+            dinoElement.className = 'placed-dino bounce';
+            dinoElement.id = `dino-${dinoCounter}`;
+            dinoElement.style.left = `${Math.max(0, Math.min(x, parkArea.clientWidth - 60))}px`;
+            dinoElement.style.top = `${Math.max(0, Math.min(y, parkArea.clientHeight - 60))}px`;
+            
+            dinoElement.innerHTML = `
+                <div class="dino-emoji">${dinoData.emoji}</div>
+            `;
+            
+            // Make placed dinos draggable within the park
+            dinoElement.draggable = true;
+            dinoElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', dinoElement.id);
+            });
+            
+            parkArea.addEventListener('drop', (e) => {
+                if (e.target === parkArea || parkArea.contains(e.target)) {
+                    const draggedId = e.dataTransfer.getData('text/plain');
+                    if (draggedId.startsWith('dino-')) {
+                        const draggedElement = document.getElementById(draggedId);
+                        if (draggedElement) {
+                            const rect = parkArea.getBoundingClientRect();
+                            const newX = e.clientX - rect.left - 25;
+                            const newY = e.clientY - rect.top - 25;
+                            draggedElement.style.left = `${Math.max(0, Math.min(newX, parkArea.clientWidth - 60))}px`;
+                            draggedElement.style.top = `${Math.max(0, Math.min(newY, parkArea.clientHeight - 60))}px`;
+                        }
+                    }
+                }
+            });
+            
+            parkArea.appendChild(dinoElement);
+            
+            // Update game state
+            score += parseInt(dinoData.points);
+            placedDinos.push({
+                id: dinoCounter,
+                type: dinoData.dino,
+                name: dinoData.name,
+                x: x,
+                y: y
+            });
+            
+            updateScore();
+            updateHappiness();
+            showMessage(`${dinoData.name} added to your park! +${dinoData.points} points`);
+            
+            // Add some random movement occasionally
+            setTimeout(() => {
+                animateDino(dinoElement);
+            }, Math.random() * 5000 + 2000);
+        }
+
+        function animateDino(dinoElement) {
+            const currentX = parseInt(dinoElement.style.left);
+            const currentY = parseInt(dinoElement.style.top);
+            const maxX = parkArea.clientWidth - 60;
+            const maxY = parkArea.clientHeight - 60;
+            
+            const newX = Math.max(0, Math.min(currentX + (Math.random() - 0.5) * 100, maxX));
+            const newY = Math.max(0, Math.min(currentY + (Math.random() - 0.5) * 100, maxY));
+            
+            dinoElement.style.transition = 'all 2s ease-in-out';
+            dinoElement.style.left = `${newX}px`;
+            dinoElement.style.top = `${newY}px`;
+            
+            setTimeout(() => {
+                dinoElement.style.transition = 'all 0.3s ease';
+                setTimeout(() => animateDino(dinoElement), Math.random() * 10000 + 5000);
+            }, 2000);
+        }
+
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        function updateHappiness() {
+            // Happiness increases with more diverse dinos
+            const dinoTypes = [...new Set(placedDinos.map(d => d.type))];
+            happiness = Math.min(100, 60 + (dinoTypes.length * 8) + (placedDinos.length * 2));
+            
+            happinessElement.textContent = happiness;
+            happinessBar.style.width = `${happiness}%`;
+            
+            if (happiness >= 90) {
+                happinessText.textContent = "Your dinos are thriving! 🌟";
+            } else if (happiness >= 70) {
+                happinessText.textContent = "Your dinos are happy! 😊";
+            } else if (happiness >= 50) {
+                happinessText.textContent = "Your dinos are content 😐";
+            } else {
+                happinessText.textContent = "Your dinos need friends! 😢";
+            }
+        }
+
+        function showMessage(text) {
+            gameMessage.textContent = text;
+            gameMessage.classList.add('show');
+            setTimeout(() => {
+                gameMessage.classList.remove('show');
+            }, 2000);
+        }
+
+        // Initialize happiness bar
+        updateHappiness();
+
+        // Add some ambient sounds (visual representation)
+        setInterval(() => {
+            if (placedDinos.length > 0 && Math.random() < 0.3) {
+                const sounds = ['🦖 ROAR!', '🦕 *munch*', '🐲 *stomp*', '🦅 *screech*'];
+                showMessage(sounds[Math.floor(Math.random() * sounds.length)]);
+            }
+        }, 8000);
+    </script>
+</body>
+</html>

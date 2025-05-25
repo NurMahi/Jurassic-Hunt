@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jurassic Math - Sign Up</title>
+
+  <!-- Orbitron Futuristic Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background Dino Video -->
+  <video autoplay muted loop class="video-bg" playsinline>
+    <source src="../assets/video/dino-walk.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- Welcome UI -->
+  <div class="background">
+    <div class="overlay">
+      <h1 class="welcome-text" id="welcomeText">Welcome to Jurassic Math!</h1>
+      <form class="signup-form" id="signupForm">
+        <input type="text" placeholder="Enter your name" id="username" required />
+        <button type="submit">Start Adventure</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mute/Unmute Button -->
+  <button id="soundToggle" class="sound-toggle">🔊 Sound On</button>
+
+  <!-- Sounds -->
+  <audio id="roarSound" src="../assets/sounds/roar.mp3"></audio>
+  <audio id="welcomeSong" src="../assets/sounds/welcome.mp3"></audio>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
